@@ -216,8 +216,8 @@ def r_convert_lat_lon(lat, lon, printIt=0):
     lon_frac, lon_deg = np.modf(lon)
     lat_min = lat_frac * 60.
     lon_min = lon_frac * 60.
-    iso_lat_str = "%d%.3f" % (lat_deg, abs(lat_min))
-    iso_lon_str = "%d%.3f" % (lon_deg, abs(lon_min))
+    iso_lat_str = "%d%06.3f" % (lat_deg, abs(lat_min))
+    iso_lon_str = "%d%06.3f" % (lon_deg, abs(lon_min))
     if printIt:
         print 'lat: %s, lon: %s' % (iso_lat_str, iso_lon_str)
     else:
