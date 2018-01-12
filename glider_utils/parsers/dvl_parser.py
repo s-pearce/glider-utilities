@@ -24,7 +24,8 @@ from calendar import timegm
 import datetime as dt
 import sys
 
-from exceptions import Exception
+if sys.version_info.major < 3:
+    from exceptions import Exception
 
 
 

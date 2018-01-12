@@ -15,7 +15,7 @@ import re
 #import pygsw.vectors as gsw
 
 
-def iso2deg(latlon_str, printIt=0):
+def isostr2deg(latlon_str, printIt=0):
     latlons = latlon_str.split()
     lat_ = latlons[0]
     lon_ = latlons[2]
@@ -29,9 +29,14 @@ def iso2deg(latlon_str, printIt=0):
     lon = lon_deg - lon_min/60.
 
     if printIt:
-        print 'lat: %.4f, lon: %.4f' % (lat,lon)
+        print('lat: %.4f, lon: %.4f' % (lat,lon))
     else:
         return lat, lon
+
+def iso2deg(iso_pos_element):
+    minutes, degrees = np.modf(iso_pos_element / 100.)
+    degrees = degrees + (minutes*100./60.)
+    return degrees
 
 def deg2iso(lat, lon, printIt=0):
     lat_frac, lat_deg = np.modf(lat)
@@ -41,7 +46,7 @@ def deg2iso(lat, lon, printIt=0):
     iso_lat_str = "%d%06.3f" % (lat_deg, abs(lat_min))
     iso_lon_str = "%d%06.3f" % (lon_deg, abs(lon_min))
     if printIt:
-        print 'lat: %s, lon: %s' % (iso_lat_str, iso_lon_str)
+        print('lat: %s, lon: %s' % (iso_lat_str, iso_lon_str))
     else:
         return iso_lat_str, iso_lon_str
 
@@ -55,7 +60,7 @@ def deg2dms(lat,lon, printIt=0):
     lat_sec = lat_sfrac * 60
     lon_sec = lon_sfrac * 60
     if printIt:
-        print "lat: %s %s' %s\", lon: %s %s' %s\"" % (lat_deg, lat_min, lat_sec, lon_min, lon_sec)
+        print("lat: %s %s' %s\", lon: %s %s' %s\"" % (lat_deg, lat_min, lat_sec, lon_min, lon_sec))
 
 def speed2vector(speed, dir, deg=True):
     if deg:
