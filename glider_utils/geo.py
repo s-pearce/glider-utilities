@@ -2,17 +2,17 @@
 
 """
 @package glider_utils
-@file conv.py
+@file geo.py
 @author Stuart Pearce & Chris Wingard
-@brief Module containing common geographic glider utiliities
+@brief Module containing common geographic glider utilities
 """
 __author__ = 'Stuart Pearce & Chris Wingard'
 __license__ = 'Apache 2.0'
-import numpy as np
+
 import warnings
-#import pdb
 import re
-#import pygsw.vectors as gsw
+
+import numpy as np
 
 
 def isostr2deg(latlon_str, printIt=0):
@@ -34,6 +34,13 @@ def isostr2deg(latlon_str, printIt=0):
         return lat, lon
 
 def iso2deg(iso_pos_element):
+    """iso2deg converts a glider iso position element to 
+    a decimal degree position element.
+    E.G. 
+    > lat = 4434.456  # a latitude, 44 deg 34.456 min
+    > iso2deg(lat)
+    44.574
+    """
     minutes, degrees = np.modf(iso_pos_element / 100.)
     degrees = degrees + (minutes*100./60.)
     return degrees
@@ -66,7 +73,7 @@ def speed2vector(speed, dir, deg=True):
     if deg:
         rad_dir = np.rad2deg(dir)
     else:
-        rad_dir = deg
+        rad_dir = dir
     vx = speed * np.cos(rad_dir)
     vy = speed * np.sin(rad_dir)
     return vx, vy

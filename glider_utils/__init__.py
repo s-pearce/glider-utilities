@@ -1,10 +1,12 @@
 import sys as _sys
 from distutils.version import LooseVersion as __LV
 
-from . import conv
-from . import geo
+#from . import conv
+#from . import geo
+import geo
 from .parsers.dvl_parser import DVLparser
 from .parsers.dbd_parsers import DbaDataParser
+from .parsers.gliderstate_parser import GSxml
 #from .parsers.dbd_parsers import DataVizDataParser
 
 # seawater 3 uses the GSW package that only works for version 3.5 and higher

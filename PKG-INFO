@@ -1,0 +1,15 @@
+Metadata-Version: 1.1
+Name: glider_utils
+Version: 1.0
+Summary: Glider Utility functions: parsers, plotters, etc.
+Home-page: UNKNOWN
+Author: Stuart Pearce
+Author-email: spearce@coas.oregonstate.edu
+License: UNKNOWN
+Description: A suite of utility functions for handling Slocum G2 electric glider data and related functions.
+Platform: UNKNOWN
+Requires: numpy
+Requires: matplotlib
+Requires: pandas
+Requires: gsw
+Requires: scipy
