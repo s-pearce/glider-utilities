@@ -2,8 +2,8 @@ import sys as _sys
 from distutils.version import LooseVersion as __LV
 
 #from . import conv
-#from . import geo
-import geo
+from . import geo
+#import geo
 from .parsers.dvl_parser import DVLparser
 from .parsers.dbd_parsers import DbaDataParser
 from .parsers.gliderstate_parser import GSxml

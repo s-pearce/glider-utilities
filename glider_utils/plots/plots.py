@@ -60,8 +60,10 @@ def setTSdateFormat(ax, xlim=None):
     ax.format_xdata = mdates.DateFormatter('%Y-%m-%d')
     
 
-def profileScatter(TS, Z, ClrVar, ax=None, **kwargs):
-    if not ax:
+def profileScatter(TS, Z, ClrVar, **kwargs):
+    if 'ax' in kwargs:
+        ax = kwargs.pop('ax')
+    else:
         ax = pl.gca()
     sc = ax.scatter(TS, Z, c=ClrVar, **kwargs)
     ax.invert_yaxis()
@@ -70,119 +72,114 @@ def profileScatter(TS, Z, ClrVar, ax=None, **kwargs):
     cb = pl.colorbar(sc, ax=ax)
     return cb
     
-def TSplot(*args, ax=None, **kwargs):
+def TSplot(*args, **kwargs):
     """TSplot:  basic Time Series Plot
     Time Series plot using a Pandas DateTimeIndex series as the
     X axis scale and nicely formatting of the dates/times.
     """
-    if not ax:
+    if 'ax' in kwargs:
+        ax = kwargs.pop('ax')
+    else:
         ax = pl.gca()
     ax.plot(*args, **kwargs)
     setTSdateFormat(ax)
 
-def tempProfPlot(TS, Z, Temp, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    cb = profileScatter(TS, Z, Temp, ax=ax, **kwargs)
+
+## Specific plots
+def tempProfPlot(TS, Z, Temp, **kwargs):
+
+    cb = profileScatter(TS, Z, Temp, **kwargs)
     ax.set_ylabel('Pressure, [dbar]')
     cb.set_label('Temperature, [$^\circ$ C]')
 
-def condProfPlot(TS, Z, Cond, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    cb = profileScatter(TS, Z, Cond, ax=ax, **kwargs)
+def condProfPlot(TS, Z, Cond, **kwargs):
+
+    cb = profileScatter(TS, Z, Cond, **kwargs)
     ax.set_ylabel('Pressure, [dbar]')
     cb.set_label('Conductivity, [S/m]')
 
 
-def saltProfPlot(TS, Z, Salinity, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    cb = profileScatter(TS, Z, Salinity, ax=ax, **kwargs)
-    ax.set_ylabel('Pressure, [dbar]')
+def saltProfPlot(TS, Z, Salinity, **kwargs):
+
+    cb = profileScatter(TS, Z, Salinity, **kwargs)
+    pl.ylabel('Pressure, [dbar]')
     cb.set_label('Salinity, [psu]')
 
 
-def densityProfPlot(TS, Z, Density, ax=None, **kwargs):
+def densityProfPlot(TS, Z, Density, **kwargs):
     #find out how to use **kwargs for title
-    if not ax:
-        fig, ax = pl.subplots()
 
-    if 'vmin' in **kwargs:
-        vmin = **kwargs['vmin']
+    if 'vmin' in kwargs:
+        vmin = kwargs['vmin']
     else:
         vmin = 19.0
     cb = profileScatter(TS, Z, Density, ax=ax, vmin=19.0, **kwargs)
-    ax.set_ylabel('Pressure, [dbar]')
+    pl.ylabel('Pressure, [dbar]')
     cb.set_label('Density, [kg/m^3]')
 
+def oxyProfPlot(TS, Z, OXY, **kwargs):
 
-def chlorProfPlot(TS, Z, Chlor, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    cb = profileScatter(TS, Z, Chlor, ax=ax, **kwargs)
-    ax.set_ylabel('Pressure, [dbar]')
+    cb = profileScatter(TS, Z, OXY, **kwargs)
+    pl.ylabel('Pressure, [dbar]')
+    cb.set_label('Oxygen, [umol/L]')
+
+def chlorProfPlot(TS, Z, Chlor, **kwargs):
+
+    cb = profileScatter(TS, Z, Chlor, **kwargs)
+    pl.ylabel('Pressure, [dbar]')
     cb.set_label('Chlorophyll, [ug/L]')
     
-def cdomProfPlot(TS, Z, CDOM, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    cb = profileScatter(TS, Z, CDOM, ax=ax, **kwargs)
-    ax.set_ylabel('Pressure, [dbar]')
+def cdomProfPlot(TS, Z, CDOM, **kwargs):
+
+    cb = profileScatter(TS, Z, CDOM, **kwargs)
+    pl.ylabel('Pressure, [dbar]')
     cb.set_label('CDOM, [ppb]')
     
-def bbProfPlot(TS, Z, BB, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    cb = profileScatter(TS, Z, BB, ax=ax, **kwargs)
-    ax.set_ylabel('Pressure, [dbar]')
+def bbProfPlot(TS, Z, BB, **kwargs):
+
+    cb = profileScatter(TS, Z, BB, **kwargs)
+    pl.ylabel('Pressure, [dbar]')
     cb.set_label('Backscatter, [no dim]')
     
-def parProfPlot(TS, Z, PAR, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    cb = profileScatter(TS, Z, PAR, ax=ax, **kwargs)
-    ax.set_ylabel('Pressure, [dbar]')
+def parProfPlot(TS, Z, PAR, **kwargs):
+
+    cb = profileScatter(TS, Z, PAR, **kwargs)
+    pl.ylabel('Pressure, [dbar]')
     cb.set_label('PAR, [uE/m^2sec]')
 
     
 ## Glider Health Plots ##
 # Pitch
-def pitchPlot(TS, Pitch, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    TSplot(TS, Pitch, 'r.', ax=ax, **kwargs)
+def pitchPlot(TS, Pitch, **kwargs):
+
+    TSplot(TS, Pitch, 'r.', **kwargs)
     #ax.set_title('Glider Dive & Climb Pitch Angles')
-    ax.set_ylabel('Pitch, [degrees]')
+    pl.ylabel('Pitch, [degrees]')
 
 # Roll
-def rollPlot(TS, Roll, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    TSplot(TS, Roll, 'g.', ax=ax, **kwargs)
-    #ax.set_title('Glider Roll Angle')
-    ax.set_ylabel('Roll, [degrees]')
+def rollPlot(TS, Roll, **kwargs):
 
-def headingPlot(TS, Heading, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    TSplot(TS, Heading, 'b.', ax=ax, **kwargs)
+    TSplot(TS, Roll, 'g.', **kwargs)
     #ax.set_title('Glider Roll Angle')
-    ax.set_ylabel('Roll, [degrees]')
+    pl.ylabel('Roll, [degrees]')
+
+def headingPlot(TS, Heading, **kwargs):
+
+    TSplot(TS, Heading, 'b.', **kwargs)
+    #ax.set_title('Glider Roll Angle')
+    pl.ylabel('Roll, [degrees]')
     
-def finPlot(TS, Fin, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    TSplot(TS, Fin, 'y.', ax=ax, **kwargs)
-    #ax.set_title('Glider Roll Angle')
-    ax.set_ylabel('Roll, [degrees]')
+def finPlot(TS, Fin, **kwargs):
 
-def batteryPlot(TS, Volts, ax=None, **kwargs):
-    if not ax:
-        fig, ax = pl.subplots()
-    TSplot(TS, Volts, 'k.', ax=ax, **kwargs)
+    TSplot(TS, Fin, 'y.', **kwargs)
     #ax.set_title('Glider Roll Angle')
-    ax.set_ylabel('Roll, [degrees]')
+    pl.ylabel('Roll, [degrees]')
+
+def batteryPlot(TS, Volts, **kwargs):
+
+    TSplot(TS, Volts, 'k.', **kwargs)
+    #ax.set_title('Glider Roll Angle')
+    pl.ylabel('Roll, [degrees]')
 # Battery Voltage
 # Altitude / Bottom depth
 # Vacuum
