@@ -5,6 +5,7 @@ system. Particularly this module has the code for parsing out the
 glider's status from a log file. 
 
 -Stuart Pearce, 2015-01-30
+2018-06-01 Stuart Pearce updated to include alert messages.
 
 """
 import re
@@ -14,6 +15,11 @@ import datetime
 import numpy as np
 import sys
 
+
+# NOTES:
+#   Consider passing the whole match to the handlers instead of just match.groups().  Because
+#   then for the alert messages, which won't have groups, you can alert on match.string which
+#   shows the actual text line from the log rather than the sample text that matches in a line.
 
 # Regexes 
 REASON =  re.compile(
@@ -43,6 +49,16 @@ VY = re.compile(r'sensor:m_water_vy\(m/s\)=(-*\d+\.*\d*)')
 CURRENT_CORRECTION = re.compile(
     r' +sensor:u_use_current_correction\(nodim\)=([01])')
 
+# additional messages to monitor, added to WATCH_MSGS
+WRONG_DIVE_STR = re.compile(r'SEQUENCE: About to run initial.mi')
+MI_ABNORMAL = re.compile(r'Mission completed ABNORMALLY')
+ABORT_ON_TRY = re.compile(r'aborted on try')
+# including these next two for if it calls-in unexpectedly in GliderDOS
+# it might create a false positive when GliderDOS is intentional, but I
+# find that acceptable for now.
+CALLIN_GLIDERDOS_A = re.compile(r'GliderDos A')
+IN_INITIAL_MI = re.compile(r'MissionName:initial.mi')
+
 
 # CLASSES
 class Position(object):
@@ -64,37 +80,39 @@ class Position(object):
 class GliderStatus(object):
     """A class for storing Glider Status info.
     """
-    glider = 'NA'
-    id = None
-    reason = 'NA'
-    surface_behavior = 'NA'
-    mission = 'NA'
-    segment_long = 'NA'
-    segment_8x3 = 'NA'
-    timestamp = None
-    _last_time = None
-    ts_mission_secs = None
-    gps = Position()
-    gps_time = 'NA'
-    waypt = Position()
-    battery = None
-    amphrs = None
-    disk_free = 'NA Mbytes'
-    disk_used = 'NA Mbytes'
-    battery_charge = None
-    _last_charge = None
-    inflections = None
-    vacuum = 'NA inHg'
-    water_vx = None
-    water_vy = None
-    cc = None
-    
     def __init__(self, glider_name):
         self.glider = glider_name
         reg = re.search('(\d+)', glider_name)
         if reg:
             self.id = int(reg.group(1))
-    
+        self.reason = 'NA'  #check
+        self.surface_behavior = 'NA'  #check
+        self.mission = 'NA'  #check
+        self.segment_long = 'NA'  #check
+        self.segment_8x3 = 'NA'  #check
+        self.timestamp = None  #check
+        self._last_time = None
+        self.ts_mission_secs = None
+        self.gps = Position()  #check
+        self.gps_time = 'NA'
+        self.waypt = Position()  #check
+        self.battery = None  #check
+        self.amphrs = None  #check
+        self.disk_free = 'NA Mbytes'  #check
+        self.disk_used = 'NA Mbytes'  #check
+        self.rel_charge = None  #check
+        self._last_charge = None
+        self.inflections = None  #check
+        self.vacuum = 'NA inHg'  #check
+        self.water_vx = None  #check
+        self.water_vy = None  #check
+        self.current_correction = None  # check
+
+    def __repr__(self):
+        retstr = ''
+        for item in self.__dict__:
+            retstr += '%s: %s\n' % (item, str(self.__dict__[item]))
+        return retstr
 
 class LogParser(object):
     """A class to parse glider surface log files for information.
@@ -102,20 +120,23 @@ class LogParser(object):
     
     def __init__(self, path_to_log, glider_name):
         self.path = path_to_log
-        # group 1 = timestamp
-        # 2 = GPS latitude
-        # 3 = GPS longitude
-        # 4 = seconds since GPS was measured
-        # 5 = waypoint latititude
-        # 6 = waypoint longitude
-        # 7 = battery voltage
-        # 8 = amphours total
-        # 9 = battery relative charge
-        # 10 = total inflections
-        # 11 = vacuum
-        # 12 = east water velocity
-        # 13 = north water velocity
-        # 14 = current correction
+        # 01 = reason that the glider surfaced
+        # 02 = current mission name
+        # 03 = glider name
+        # 04 = timestamp for the surface dialogue
+        # 05 = GPS Position
+        # 06 = waypoint latitude
+        # 07 = waypoint longitude
+        # 08 = battery voltage
+        # 09 = amp hours used according to the coulomb counter
+        # 10 = hard disk space free
+        # 11 = hard disk space used
+        # 12 = battery relative charge left
+        # 13 = total inflections
+        # 14 = vacuum
+        # 15 = east water velocity
+        # 16 = north water velocity
+        # 17 = current correction flag
      
         self.regex = {
             'reason': {'pattern': REASON, 'parsed': 0, 'handler': self._reason},
@@ -136,6 +157,11 @@ class LogParser(object):
             'vy': {'pattern': VY, 'parsed': 0, 'handler': self._vy},
             'current_correction': {'pattern': CURRENT_CORRECTION, 'parsed': 0, 'handler': self._cc}
         }
+        self.summary_n = len(self.regex)
+        self.sum_parsed_count = 0
+        self.summary_parsed = False
+        self.summary_sent = False
+        self.alert_sent = False
         
         self.glider_stat = GliderStatus(glider_name)
     
@@ -150,8 +176,16 @@ class LogParser(object):
                 if match:
                     self.regex[key]['handler'](match.groups())
                     self.regex[key]['parsed'] = 1
-                    continue
+                    self.sum_parsed_count += 1
+                    break
+        if self.sum_parsed_count == self.summary_n:
+            self.summary_parsed = True
 
+    def detect_summary_parsed(self):
+        """ Check if the core summary items are parsed.  If they are
+        it should trigger sending out an SMS summary message"""
+        return self.summary_parsed
+                    
     def _reason(self, groups):
         """The handler for the regex matched groups for the reason line in a
         glider dockserver log.  Input is a tuple with 2 entries that are
@@ -187,6 +221,7 @@ class LogParser(object):
         ts = datetime.datetime.strptime(groups[0], '%b %d %H:%M:%S %Y')
         self.glider_stat.timestamp = ts
         self.glider_stat.waypt.time = ts
+        self.glider_stat.ts_mission_secs = groups[1]
 
     def _gps(self, groups):
         """The handler for the regex matched groups for the GPS Position line
@@ -197,7 +232,9 @@ class LogParser(object):
         measurement.
         """
         self.glider_stat.gps.lat_iso = groups[0]
+        self.glider_stat.gps.lat = self.glider_stat.gps._iso2deg(groups[0])
         self.glider_stat.gps.lon_iso = groups[1]
+        self.glider_stat.gps.lon = self.glider_stat.gps._iso2deg(groups[1])
         seconds_offset = datetime.timedelta(seconds = float(groups[2]))
         # we are retrieving this time because it is the closest to the glider
         # surfacing time and is best used to predict the next surface time.
@@ -277,14 +314,14 @@ class LogParser(object):
         a glider dockserver log.  Input is a tuple with 1 entry that is a
         string of the estimated average Eastward water velocity in m/s.
         """
-        self.glider_stat.vx = float(groups[0])
+        self.glider_stat.water_vx = float(groups[0])
 
     def _vy(self, groups):
         """The handler for the regex matched groups for the m_water_vy line in
         a glider dockserver log.  Input is a tuple with 1 entry that is a
         string of the estimated average Northward water velocity in m/s.
         """
-        self.glider_stat.vy = float(groups[0])
+        self.glider_stat.water_vy = float(groups[0])
 
     def _cc(self, groups):
         """The handler for the regex matched groups for the 
