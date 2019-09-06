@@ -18,7 +18,7 @@ setup(
 #        'parsers.gliderstate_parser', 'parsers.log_parser',
 #        'plots.enduranceMaps', 'plots.plots', 'plots.SingleGliderTracks',
 #        'stats.days_of_gldata.'],
-    package_data={'glider_utils.plots.ETOPO1.mat},
+    package_data={'glider_utils.plots.ETOPO1.mat'},
     requires=['numpy', 'matplotlib', 'pandas', 'gsw',
     'mpl_toolkits.basemap'],
 )
