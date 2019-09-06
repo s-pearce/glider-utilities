@@ -157,7 +157,50 @@ def main(nc_files):
     with open('data_days_results.pkl', 'wb') as pkl:
         pickle.dump(data_persist, pkl)
 
-def get_data_duration(times):
+
+def bounded_times(data_times, lats, lons, time_bounds=None, lat_bounds=None, lon_bounds=None):
+    
+    if time_bounds is not None:
+        time_bounds = np.asarray(time_bounds)
+        bound_timeii = np.logical_and(
+            data_times >= time_bounds.min,
+            data_times <= time_bounds.max)
+    else:
+        bound_timeii = np.full(len(data_times), True)
+    
+    if lat_bounds is not None:
+        lat_bounds = np.asarray(lat_bounds)
+        bound_latsii = np.logical_and(
+            lats >= lat_bounds.min, 
+            lats <= lat_bounds.max)
+    else:
+        bound_latsii = np.full(len(data_times), True)
+    
+    if lon_bounds is not None:
+        lon_bounds = np.asarray(lon_bounds)
+        bound_lonsii = np.logical_and(
+            lons >= lon_bounds.min,
+            lons <= lon_bounds.max)
+    else:
+        lon_bounds = np.full(len(data_times), True)
+        
+    bound_posii = np.logical_and(bound_latsii, bound_lonsii)
+    bound_ii = np.logical_and(bound_timeii, bound_posii)
+    times_in_bounds = data_times[bound_ii]
+    return times_in_bounds
+
+
+def get_data_duration(times, skip_gap=86400):
+    """Summation of data time duration for the purpose of data statistics 
+    /information reporting; excluding any gaps in time larger than `skip_gap`
+    seconds.
+    
+    :param : times, timestamps of data samples in epoch seconds
+    :param : skip_gap, minimum time gap size in seconds to not count
+             in the summation towards `data_duration`.  Default is 86400, 1 day
+    
+    :returns : data_duration, the time in seconds
+    """
     dt = np.diff(times)
     gaps = np.flatnonzero(dt > 86400.0)
     gaps = np.append(gaps, len(times)-1)  # appends the end time index
@@ -169,6 +212,7 @@ def get_data_duration(times):
         if gap+1 < len(times):
             tstart_section = times[gap+1] 
     return data_duration
+
 
 if __name__ == "__main__":
     logging.info(sys.version)

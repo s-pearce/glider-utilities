@@ -61,3 +61,29 @@ def rho_sp(cond, temp, pres, lat=46.0, lon=-124.5):
     CT = gsw.ct_from_t(SA, temp, pres)
     Rho = gsw.rho(SA, CT, pres)
     return Rho, SP
+
+
+def rho_from_sp(SP, temp, pres, lat=46.0, lon=-124.5):
+    """density from salinity from a CTD.
+    
+    Returns in-situ density and practical salinity from 
+    conductivity, temperature, pressure, latitude, and 
+    longitude as reported from any standard CTD.
+    
+    Usage:
+        Rho = rho_from_sp(SP, temp, pres, lat, lon)
+        
+        where
+        
+        Rho = in-situ density, [kg/m^3], use pres=0.0 for potential density
+        SP = practical salinity, [pss]
+        temp = temperature, [deg C]
+        pres = pressure, [dbar]
+        lat = latitude, decimal degrees +N
+        lon = longitude, decimal degrees +E
+    """
+
+    SA = gsw.sa_from_sp(SP, pres, lon, lat)
+    CT = gsw.ct_from_t(SA, temp, pres)
+    Rho = gsw.rho(SA, CT, pres)
+    return Rho

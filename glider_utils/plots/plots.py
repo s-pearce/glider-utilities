@@ -2,6 +2,7 @@
 
 import matplotlib.pyplot as pl
 import matplotlib.dates as mdates
+import numpy as np
 
 
 mints = mdates.MinuteLocator(interval=30)
@@ -183,3 +184,13 @@ def batteryPlot(TS, Volts, **kwargs):
 # Battery Voltage
 # Altitude / Bottom depth
 # Vacuum
+
+def plot_vert_lines(x, style='k:', ax=None):
+    x = np.atleast_1d(x)
+    n = len(x)
+    x = np.tile(x, (2, 1))
+    if not ax:
+        ax = plt.gca()
+    ylims = ax.get_ylim()
+    y = np.array([np.repeat(ylims[0], n), np.repeat(ylims[1], n)])
+    plt.plot(x, y, style)
