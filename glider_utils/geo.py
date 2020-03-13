@@ -102,6 +102,26 @@ def azimuth(pt1, pt2):
     return azi
 #
 def haversine_dist(lat1, lon1, lat2, lon2):
+    """Calculate the great circle distance between 2 lat & lon positions
+    
+    Uses the haversine formula to calculate the great circle distance in
+    km between 2 positions.
+    Params
+    ------
+    lat1,lon1 : float (decimal degrees)
+        The latitude and longitude of the first position as decimal
+        degrees.
+    lat2,lon2 : float
+        The latitude and longitude of the second position as decimal
+        degrees.
+    
+    returns
+    -------
+    dist : float (km)
+        The great circle distance between positions 1 and 2 in km.
+        
+    from http://www.movable-type.co.uk/scripts/latlong.html
+    """
     R = 6371 # km
     phi1 = np.deg2rad(lat1)
     phi2 = np.deg2rad(lat2)
