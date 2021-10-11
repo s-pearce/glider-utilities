@@ -152,3 +152,54 @@ def bearing(lat1, lon1, lat2, lon2):
     x = np.cos(phi1) * np.sin(phi2) - np.sin(phi1)*np.cos(phi2)*np.cos(del_lam)
     brng = np.rad2deg(np.arctan2(y, x))
     return brng % 360
+
+
+def direction_text(bearing, div=8):
+    """Direction text string 
+    
+    Takes a numerical bearing and returns the text abbreviation 
+    for the cardinal directions, N, NE, NNE, etc. according to the
+    division `div` argument (defaults to the 8 cardinal directions)
+    
+    Params
+    ------
+    bearing : float
+        The bearing value to translate into a direction text
+    div : Division, optional int value of 4, 8, or 16
+        The number of divisions of compass directions to use. Allowed
+        divisions are 4, 8, or 16.  8 is the default and is used for any
+        number that is not 4, 8, or 16.
+        
+        4 : N,E,S,W
+        8 : N,NE,E,SE,S,SW,W,NW
+        16: N,NNE,NE,ENE,E,ESE,SE,SSE,S,SSW,SW,WSW,W,WNW,NW,NNW
+    
+    Returns
+    -------
+    direction : str
+        The text direction for the bearing input
+    
+    Borrowed from https://stackoverflow.com/questions/3209899/
+    determine-compass-direction-from-one-lat-lon-to-the-other"""
+
+    dirs4 = ["E", "S", "W", "N"]
+    dirs8 = ["NE", "E", "SE", "S", "SW", "W", "NW", "N"]
+    dirs16 = [
+        'NNE', 'NE', 'ENE', 'E',
+        'ESE', 'SE', 'SSE', 'S',
+        'SSW', 'SW', 'WSW', 'W',
+        'WNW', 'NW', 'NNW', 'N']
+    
+    if div == 4:
+        dirs = dirs4
+    elif div == 16:
+        dirs = dirs16
+    else:
+        dirs = dirs8
+
+    div_range = (360/div)
+    mark = div_range/2
+    
+    index = (bearing - mark) % 360
+    index = int(index / div_range)
+    return dirs[index]
