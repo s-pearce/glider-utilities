@@ -4,7 +4,8 @@ from distutils.version import LooseVersion as __LV
 import numpy as np
 
 #from . import conv
-from . import geo
+from .geo import *
+from .analysis import *
 #import geo
 from .parsers.dvl_parser import DVLparser
 from .parsers.dbd_parsers import DbaDataParser
