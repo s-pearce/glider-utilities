@@ -16,7 +16,7 @@ def amphrs_used_per_day(pdts, amphrs):
         The time stamps corresponding to `amphrs`
     amphrs : numpy ndarray
         A glider's measured cumulative amp hours used from 
-        `m_coulomb_amphrs_total`.  Should have NaNs removed already.
+        `m_coulomb_amphr_total`.  Should have NaNs removed already.
         
     Returns
     -------
@@ -46,7 +46,7 @@ def amphrs_used_per_day(pdts, amphrs):
     # find the amphrs used each day as an amphrs_per_day value
     ahrspd = []
     for dayte in daterange:
-        day_ii = np.flatnonzero(ts.date == dayte)  # the day's indices
+        day_ii = np.flatnonzero(pdts.date == dayte)  # the day's indices
         ahrs_used = amphrs[day_ii][-1] - amphrs[day_ii][0]
         day_fraction = (pdts[day_ii][-1] - pdts[day_ii][0]).total_seconds() / 86400
         ahrs_per_day = ahrs_used / day_fraction
