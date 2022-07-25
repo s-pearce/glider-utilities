@@ -35,16 +35,9 @@ def amphrs_used_per_day(pdts, amphrs):
     # so create a daterange (no times)
     daterange = pd.date_range(start.date(), end.date())
     
-    # for plotting amphrs per day create a timestamp for each value at
-    # the day's center.
-    ahrspd_ts = daterange + td(hours=12)
-    # If the last timestamps of data is less than the day center (12:00 UTC)
-    # then make the last timestamp the same as the end of the data record
-    if ahrspd_ts[-1] > pdts[-1]:
-        ahrspd_ts = ahrspd_ts[:-1].append(pd.DatetimeIndex([pdts[-1]]))
-    
     # find the amphrs used each day as an amphrs_per_day value
     ahrspd = []
+    ahrspd_ts = []
     for dayte in daterange:
         day_ii = np.flatnonzero(pdts.date == dayte)  # the day's indices
         if len(day_ii) == 0:
@@ -53,6 +46,15 @@ def amphrs_used_per_day(pdts, amphrs):
         day_fraction = (pdts[day_ii][-1] - pdts[day_ii][0]).total_seconds() / 86400
         ahrs_per_day = ahrs_used / day_fraction
         ahrspd.append(ahrs_per_day)
+        ahrspd_ts.append(dayte)
+    
+        # for plotting amphrs per day create a timestamp for each value at
+    # the day's center.
+    ahrspd_ts = ahrspd_ts + td(hours=12)
+    # If the last timestamps of data is less than the day center (12:00 UTC)
+    # then make the last timestamp the same as the end of the data record
+    if ahrspd_ts[-1] > pdts[-1]:
+        ahrspd_ts = ahrspd_ts[:-1].append(pd.DatetimeIndex([pdts[-1]]))
 
     return ahrspd_ts, np.array(ahrspd)
     
