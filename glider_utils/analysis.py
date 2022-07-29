@@ -42,6 +42,7 @@ def amphrs_used_per_day(pdts, amphrs):
         day_ii = np.flatnonzero(pdts.date == dayte)  # the day's indices
         # exclude any missing days of data
         if len(day_ii) == 0:
+            print("skipping ", dayte)
             continue
         ahrs_used = amphrs[day_ii][-1] - amphrs[day_ii][0]
         day_fraction = (pdts[day_ii][-1] - pdts[day_ii][0]).total_seconds() / 86400
@@ -54,7 +55,7 @@ def amphrs_used_per_day(pdts, amphrs):
     # If the last timestamp of data is less than the day center (12:00 UTC)
     # then make the last timestamp the same as the end of the data record
     if ahrspd_ts[-1] > pdts[-1]:
-        ahrspd_ts = ahrspd_ts[:-1].append(pd.DatetimeIndex([pdts[-1]]))
+        ahrspd_ts[-1] = pdts[-1]
 
     return ahrspd_ts, np.array(ahrspd)
     
