@@ -9,8 +9,7 @@ import pickle
 import netCDF4
 import numpy as np
 
-sys.path.append('C:\\Users\\spearce\\code\\python\\gliderdac')
-from ooidacutils.ooi_gps import iso2deg
+from ..geo import iso2deg
 from fwd_fill_and_cluster_find import fwd_fill
 
 """days_of_gldata.py  Number of days of chlorophyll data on the GH & NH line.
