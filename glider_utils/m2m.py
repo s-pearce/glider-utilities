@@ -1,4 +1,5 @@
-import netrc 
+import netrc
+import time
 import logging
 import requests
 from requests.adapters import HTTPAdapter
@@ -32,14 +33,17 @@ class m2mSession(object):
     def __init__(self, netrc_account=PROD_DOMAIN, server_target="prod"):
         """M2M session for ingestion and information requests
 
-        :param netrc_account: str | netrc account name that has the
-            api_key, user email address, and api_token credentials stored
-        :param server_target: str | `prod`, `dev01`, or `dev02` to select
-            which server url base to use.
-        :param debug: bool | If True, prints the ingest request instead
-            of submitting to the session. Default False.
-        :return: json object with the site-node-sensor-deployment specific
-            sensor metadata
+        Parameters
+        ----------
+        netrc_account : str
+            netrc account name that has the api_key, user email address,
+            and api_token credentials stored.  If none is given, it
+            defaults to attempt using "ooinet.oceanobservatories.org" as
+            the netrc account name.
+        server_target : str
+            Indicate which server url base to use, the production server
+            or the development 1 or 2 server. Default is production.
+            Choices are: "prod", "dev01", or "dev02"
         """
 
         # setup constants used to access the data from the different M2M interfaces
@@ -96,12 +100,24 @@ class m2mSession(object):
         specified sensor and deployment. This information is part of the sensor
         metadata specific to that deployment.
 
-        :param site: Site name to query
-        :param node: Node name to query
-        :param sensor: Sensor name to query
-        :param deploy: Deployment number
-        :return: json object with the site-node-sensor-deployment specific sensor
-                 metadata
+        Parameters
+        ----------
+        gliderid : int
+            Glider serial number
+        deployment : int
+            Deployment number
+        sensor : str
+            Sensor to query, defaults to the vehicle data. Available choices:
+            "eng" = engineering/vehicle data
+            "parad" = Photosynthetic Available Radiation (PAR)
+            "flort" = Fluorometer with Chlorophyll, CDOM, and Backscatter
+            "adcpa" = ADCP water velocity profiler
+            "dosta" = Dissolved Oxygen
+            "ctdgv" = Conductivity, Temperature, Depth (CTD)
+
+        Returns
+        -------
+        dictionary of json deployment info specifically for the sensor
         """
         if gliderid > 600:
             node = "G{:04d}".format(gliderid)
@@ -133,11 +149,27 @@ class m2mSession(object):
         Based on the site, node and sensor names and the deployment number,
         determine the start and end times for a deployment.
 
-        :param site: Site name to query
-        :param node: Node name to query
-        :param sensor: Sensor name to query
-        :param deploy: Deployment number
-        :return: start and stop dates for the deployment of interest
+        Parameters
+        ----------
+        gliderid : int
+            Glider serial number
+        deployment : int
+            Deployment number
+        sensor : str
+            Sensor to query, defaults to the CTD. Available choices:
+            "eng" = engineering/vehicle data
+            "parad" = Photosynthetic Available Radiation (PAR)
+            "flort" = Fluorometer with Chlorophyll, CDOM, and Backscatter
+            "adcpa" = ADCP water velocity profiler
+            "dosta" = Dissolved Oxygen
+            "ctdgv" = Conductivity, Temperature, Depth (CTD)
+
+        Returns
+        -------
+        start : str 
+            Deployment start time in ISO time string format
+        stop : str
+            Deployment end/recovery time in ISO time string format
         """
         # request the sensor deployment metadata
         
