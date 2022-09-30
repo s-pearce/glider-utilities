@@ -41,7 +41,7 @@ def amphrs_used_per_day(pdts, amphrs):
     for dayte in daterange:
         day_ii = np.flatnonzero(pdts.date == dayte)  # the day's indices
         # exclude any missing days of data
-        if len(day_ii) == 0:
+        if len(day_ii) < 2:
             print("skipping ", dayte)
             continue
         ahrs_used = amphrs[day_ii][-1] - amphrs[day_ii][0]

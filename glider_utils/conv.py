@@ -17,8 +17,9 @@ import numpy as np
 
 
 
-# km2nm = 
-# nm2km =
+km2nm = 0.539957
+nm2km = 1.852
+mlO2umolO = 44.6596
 # mph2mps =
 # m2ft =
 # ft2m =
