@@ -26,7 +26,7 @@ REASON =  re.compile(
     r'Because:(timeout expired|Hit a waypoint|pitch not commanded|' + 
     'no comms for a while) \[behavior surface_([2-6])')
 MISSION =  re.compile(
-    r'MissionName:([_A-Z]+\.MI) MissionNum:([-_a-z0-9]+) ' + 
+    r'MissionName:([_A-Za-z]+\.(?:MI|mi)) MissionNum:([-_a-z0-9]+) ' + 
     '\((\d{4}\.\d{4})')
 GLIDER =  re.compile(r'Vehicle Name: ([_a-z0-9]+)')
 TIMESTAMP = re.compile(
@@ -76,6 +76,10 @@ class Position(object):
         min_d100, deg = np.modf(latlon/100.)
         dec_latlon = deg + (min_d100*100.)/60.
         return dec_latlon
+
+    def __repr__(self):
+        reprstr = "%s N, %s E" % (self.lat_iso, self.lon_iso)
+        return reprstr
 
 class GliderStatus(object):
     """A class for storing Glider Status info.
