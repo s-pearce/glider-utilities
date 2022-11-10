@@ -34,8 +34,8 @@ TIMESTAMP = re.compile(
 GPS =  re.compile(
     r'GPS Location: +(-*\d+\.*\d*) N (-*\d+\.*\d*) E ' + 
     'measured +([.+e0-9]+) secs ago')
-WAYPT_LAT =  re.compile(r'sensor:c_wpt_lat\(lat\)=(-*\d+\.*\d*)')
-WAYPT_LON =  re.compile(r'sensor:c_wpt_lon\(lon\)=(-*\d+\.*\d*)')
+WAYPT_LAT =  re.compile(r'sensor:c_wpt_lat\(lat\)=(-*\d+\.*\d*) +(\d+\.*\d*) secs ago')
+WAYPT_LON =  re.compile(r'sensor:c_wpt_lon\(lon\)=(-*\d+\.*\d*) +(\d+\.*\d*) secs ago')
 BATTERY =  re.compile(r'sensor:m_battery\(volts\)=(\d+\.*\d*)')
 AMPHRS =  re.compile(r'sensor:m_coulomb_amphr_total\(amp-hrs\)=(\d+\.*\d*)')
 DISK_FREE =  re.compile(r'sensor:m_disk_free\(Mbytes\)=(\d+\.*\d*)')
@@ -80,7 +80,14 @@ class Position(object):
     def __repr__(self):
         reprstr = "%s N, %s E" % (self.lat_iso, self.lon_iso)
         return reprstr
-
+    
+    @property
+    def ts(self):
+        if isinstance(self.time, datetime.datetime):
+            return (self.time - datetime.datetime(1970,1,1)).total_seconds()
+        else:
+            return None
+.
 class GliderStatus(object):
     """A class for storing Glider Status info.
     """
@@ -246,12 +253,20 @@ class LogParser(object):
 
     def _waypt_lat(self, groups):
         """The handler for the regex matched groups for the c_wpt_lat line in a
-        glider dockserver log.  Input is a tuple with 1 entry that is a string
-        of the latitude in ISO format (positive Northern hemisphere) of the
-        glider's current waypoint.
+        glider dockserver log.  Input is a tuple with 1 or 2 entries 
+        where the first is a string of the latitude in ISO format 
+        (positive Northern hemisphere) of the glider's current waypoint
+        and the second is the seconds age of when the waypoint was last
+        changed. Only the waypoint latitude (not longitude) handler accepts
+        the age in seconds to simplify things (in case lon age differs)
+        and since lat is printed first.
         """
         self.glider_stat.waypt.lat_iso = groups[0]
         self.glider_stat.waypt.lat = self.glider_stat.waypt._iso2deg(groups[0])
+        if self.glider_stat.timestamp:
+            dt = self.glider_stat.timestamp - datetime.timedelta(
+                seconds=float(groups[1]))
+            self.glider_stat.waypt.time = dt
 
     def _waypt_lon(self, groups):
         """The handler for the regex matched groups for the c_wpt_lon line in a
