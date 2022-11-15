@@ -87,7 +87,7 @@ class Position(object):
             return (self.time - datetime.datetime(1970,1,1)).total_seconds()
         else:
             return None
-.
+
 class GliderStatus(object):
     """A class for storing Glider Status info.
     """
