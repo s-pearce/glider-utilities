@@ -251,7 +251,7 @@ class LogParser(object):
         self.glider_stat.gps.lon_iso = groups[1]
         self.glider_stat.gps.lon = self.glider_stat.gps._iso2deg(groups[1])
         seconds_offset = float(groups[2])
-        if seconds_offset < 1e10 and self.glider_stat.gps.timestamp:
+        if seconds_offset < 1e10 and self.glider_stat.timestamp:
             soffset_td = datetime.timedelta(seconds=seconds_offset)
             self.glider_stat.gps.time = self.glider_stat.timestamp - soffset_td
         # we are retrieving this time because it is the closest to the glider
