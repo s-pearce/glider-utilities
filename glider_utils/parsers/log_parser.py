@@ -242,14 +242,20 @@ class LogParser(object):
         was measured which is used to create a timestamp for the GPS
         measurement.
         """
+        lat_iso = groups[0]
+        lon_iso = groups[1]
+        if lat_iso == "69696969.000" or lon_iso == "69696969.000":
+            return
         self.glider_stat.gps.lat_iso = groups[0]
         self.glider_stat.gps.lat = self.glider_stat.gps._iso2deg(groups[0])
         self.glider_stat.gps.lon_iso = groups[1]
         self.glider_stat.gps.lon = self.glider_stat.gps._iso2deg(groups[1])
-        seconds_offset = datetime.timedelta(seconds = float(groups[2]))
+        seconds_offset = float(groups[2])
+        if seconds_offset < 1e10 and self.glider_stat.gps.timestamp:
+            soffset_td = datetime.timedelta(seconds=seconds_offset)
+            self.glider_stat.gps.time = self.glider_stat.timestamp - soffset_td
         # we are retrieving this time because it is the closest to the glider
         # surfacing time and is best used to predict the next surface time.
-        self.glider_stat.gps.time = self.glider_stat.timestamp - seconds_offset
 
     def _waypt_lat(self, groups):
         """The handler for the regex matched groups for the c_wpt_lat line in a
