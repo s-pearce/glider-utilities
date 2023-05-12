@@ -23,6 +23,9 @@ from struct import unpack
 from calendar import timegm
 import datetime as dt
 import sys
+import logging
+
+log = logging.getLogger()
 
 if sys.version_info.major < 3:
     from exceptions import Exception
@@ -313,7 +316,7 @@ class DVLparser(object):
         checksum = total & 65535    # bitwise and with 65535 or mod vs 65536
 
         if checksum != unpack("<H", ensemble[length: length+2])[0]:
-            log.debug("Checksum mismatch " + str(checksum) + " != "
+            print("Checksum mismatch " + str(checksum) + " != "
                       + str(unpack("<H", ensemble[length: length+2])[0]))
             raise SampleException("Checksum mismatch")
 

@@ -10,9 +10,13 @@ __author__ = 'Stuart Pearce & Chris Wingard'
 __license__ = 'Apache 2.0'
 import numpy as np
 import warnings
+import os
 #import pdb
 import re
+import logging
 #import pygsw.vectors as gsw
+
+DEFAULTBYTES = 500
 
 class DbaDataParser(object):
     """
@@ -192,3 +196,264 @@ class GliderData(dict):
     """
     def __init__():
         dict.__init__
+
+
+
+def parse_header(file):
+    """Parse the header information in a Slocum glider data file regardless if
+    binary or ascii format.
+    All header lines of the format 'key: value' are parsed.
+
+    Args:
+        file: glider data file to parse
+        file_info : boolean flag whether or not to include file information
+
+    Returns:
+        A dictionary containing the file metadata
+    """
+    
+    # ToDo:  I could likely improve the speed a lot on this by just starting
+    # with the filenames and only searching the bracket of files where the
+    # time to look up falls between the Ordianal day of the filename.
+    # but then again, it only takes like 8 seconds and will only ever be used
+    # by me in single calls to find where a particular event occurs.
+    
+    # file ends in "bd" indicates a raw Slocum glider binary data file
+    bdfile = file.lower().endswith('bd')
+    
+    # check if the file is binary (works with Python 3 only) to eliminate
+    # the case where a file was converted to ascii but not renamed.
+    # binaryfile = _determine_if_binary(file)
+    # Note: 15% of the runtime is due to this one call.  Since it is really just
+    #       me that would EVER use this, we can just change to using the
+    #       `endswith("bd")` statement above and cut down on runtime.
+
+    binary = bdfile # and binaryfile
+    if binary:
+        readingflag = "rb"
+    else:
+        readingflag = "r"
+    
+    with open(file, readingflag) as fid:
+        header = _parse_header(fid, binary)
+    
+    return header
+
+
+def _determine_if_binary(file):
+    try:
+        with open(file, 'r') as fid:
+            line = fid.readline()
+        binaryfile = False
+    except UnicodeDecodeError:
+        binaryfile = True
+    return binaryfile
+
+
+def _readline(fid, binary):
+    if binary:
+        return fid.readline().decode()
+    else:
+        return fid.readline()
+
+
+def _parse_header(fid, binary=False, file_info=True):
+    """A Slocum glider data header parser. 
+    If binary provide the binary boolean.
+    All header lines of the format 'key: value' are parsed.
+
+    Args:
+        fid: open glider data file object to parse
+        binary: bool
+            True if the file is a binary glider data file, False if ascii
+
+    Returns:
+        A dictionary containing the file metadata
+    """
+    
+    headers = {}
+    try:
+        lines_read = 0
+        # starting with 14 field/tag lines at the start of the file (the only 
+        # value I've ever seen), but will update using `num_ascii_tags`
+        n_field_lines = 14
+        while lines_read < n_field_lines:
+            line = _readline(fid, binary)
+            lines_read += 1
+            tokens = line.split(': ')
+            if len(tokens) != 2:
+                break
+            kw = tokens[0].strip()
+            value = tokens[1].strip()
+            headers[kw] = value
+            if kw == "num_ascii_tags":
+                n_field_lines = int(value)
+            
+    except IOError as e:
+        logging.error('Error parsing {:s} data header: {}'.format(
+            fid.name, e))
+        return
+    except UnicodeDecodeError:
+        pass
+
+    if not headers:
+        logging.warning('No headers parsed: {:s}'.format(
+            fid.name))
+        return
+
+    if 'num_ascii_tags' in headers:
+        if lines_read != int(headers['num_ascii_tags']):
+            logging.warning(
+                'Unexpected number of header fields: {:s}'.format(fid.name))
+            return
+    else:
+        logging.warning('num_ascii_tags header line missing: {:s}'.format(
+            fid.name))
+        return
+
+    # Add source file, and file size
+    if file_info:
+        headers['source_file'] = os.path.abspath(fid.name)
+        # Add the dba file size
+        headers['file_size_bytes'] = os.path.getsize(fid.name)
+
+    return headers
+
+
+def get_fileopen_time(file, bytestoread=DEFAULTBYTES):
+    """Get the `fileopen_time` from the header of a glider data file.
+    
+    file : str
+        Filename of glider data file, binary or ascii
+    bytestoread : int
+        The number of bytes to read & find `fileopen_time`. Assumes the field
+        will be found within these number of bytes.  Default is 500.
+        The entire glider data header is usually around 400 bytes or so.
+    
+    Returns
+    -------
+    fileopentime : str
+    """
+    # this works an order of magnitude faster than _parse_header but requires
+    # the assumption that the `fileopen_time` field exists within the first 
+    # `bytestoread` bytes
+    with open(file, 'rb') as fid:
+        hdr_lines = fid.read(bytestoread).decode(errors="ignore")
+    match = re.search(
+        r'fileopen_time: +(\w{3}_\w{3}_+\d{1,2}_\d{2}:\d{2}:\d{2}_\d{4})\n',
+        hdr_lines)
+    if match:
+        return match.group(1)
+
+
+def hdr_value(field, file, bytestoread=DEFAULTBYTES):
+    """Get a field value from the header of a glider data file.
+    
+    Parameters
+    ----------
+    field : str
+        Field name
+    file : str
+        Filename of glider data file, binary or ascii
+    bytestoread : int
+        The number of bytes to read & find `field`. Assumes the field value
+        will be found within these number of bytes.  Default 500 bytes. 
+        The entire glider data header is usually around 400 bytes or so.
+    
+    Returns
+    -------
+    fileopentime : str
+    """
+    with open(file, 'rb') as fid:
+        hdr_lines = fid.read(bytestoread).decode(errors="ignore")
+    match = re.search(
+        r'{:s}: +(.+)\n'.format(field),
+        hdr_lines)
+    if match:
+        return match.group(1)
+
+
+def get_cache(file, bytestoread=DEFAULTBYTES):
+    """Get cache crc value (cache filename) from the header of a glider data file.
+    
+    Parameters
+    ----------
+    file : str
+        Filename of glider data file, binary or ascii
+    bytestoread : int
+        The number of bytes to read & find `sensor_list_crc`. Assumes the field
+        will be found within these number of bytes.  Default is 500.
+        The entire glider data header is usually around 400 bytes or so.
+    
+    Returns
+    -------
+    cache_crc : str
+    """
+    return hdr_value('sensor_list_crc', file, bytestoread=bytestoread)
+
+def get_8x3fn(file, bytestoread=DEFAULTBYTES):
+    """Get the 8 digit short filename from the header of a glider data file.
+    
+    Parameters
+    ----------
+    file : str
+        Filename of glider data file, binary or ascii
+    bytestoread : int
+        The number of bytes to read & find `the8x3_filename`. Assumes the field
+        will be found within these number of bytes.  Default is 500.
+        The entire glider data header is usually around 400 bytes or so.
+    
+    Returns
+    -------
+    fileopentime : str
+    """
+    return hdr_value('the8x3_filename', file, bytestoread=bytestoread)
+
+def get_fullfn(file, bytestoread=DEFAULTBYTES):
+    """Get `full_filename` value from the header of a glider data file.
+    
+    Parameters
+    ----------
+    file : str
+        Filename of glider data file, binary or ascii
+    bytestoread : int
+        The number of bytes to read & find `full_filename`. Assumes the field
+        will be found within these number of bytes.  Default is 500.
+        The entire glider data header is usually around 400 bytes or so.
+    
+    Returns
+    -------
+    full_filename : str
+    """
+    return hdr_value('full_filename', file, bytestoread=bytestoread)
+
+def get_mission(file, bytestoread=DEFAULTBYTES):
+    """Get a field value from the header of a glider data file.
+    
+    Parameters
+    ----------
+    file : str
+        Filename of glider data file, binary or ascii
+    bytestoread : int
+        The number of bytes to read & find `full_filename`. Assumes the field
+        will be found within these number of bytes.  Default is 500.
+        The entire glider data header is usually around 400 bytes or so.
+    
+    Returns
+    -------
+    fileopentime : str
+    """
+    return hdr_value('mission_name', file, bytestoread=bytestoread)
+
+
+# Note: shortening the regex does NOT save any time
+#def just_get_fileopen_time2(file):
+#    """a potentially faster read of fileopen time for finding which file a timestamp
+#    occurs in, but requires some assumptions and may not work as well."""
+#    with open(file, 'rb') as fid:
+#        hdr_lines = fid.read(500).decode(errors="ignore")
+#    match = re.search(
+#        r'fileopen_time: +(\S+)\n',
+#        hdr_lines)
+#    if match:
+#        return match.group(1)
