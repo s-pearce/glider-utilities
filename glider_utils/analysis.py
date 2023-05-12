@@ -39,7 +39,7 @@ def amphrs_used_per_day(pdts, amphrs):
     ahrspd = []
     ahrspd_ts = []  # timestamp to return with ahrspd
     for dayte in daterange:
-        day_ii = np.flatnonzero(pdts.date == dayte)  # the day's indices
+        day_ii = np.flatnonzero(pdts.date == dayte.date())  # the day's indices
         # exclude any missing days of data
         if len(day_ii) < 2:
             print("skipping ", dayte)
