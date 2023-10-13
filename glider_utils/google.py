@@ -2,6 +2,7 @@
 # SP 2023-10-03
 
 import pandas as pd
+import numpy as np
 
 DEPLOYMENT_SHEET_URL = (
     'https://docs.google.com/spreadsheets/d/'      
@@ -107,7 +108,15 @@ def deployment_dates(glider, deployment_num):
     """
     fmt = "%Y-%m-%dT%H:%M:%S"
     start, end = deployment_dates_pdts(glider, deployment_num)
-    return start.strftime(fmt), end.strftime(fmt)
+    if not pd.isna(start):
+        start = start.strftime(fmt)
+    else:
+        start = None
+    if not pd.isna(end):
+        end = end.strftime(fmt)
+    else:
+        end = None
+    return start, end
 
 class GliderIDError(Exception):
     """exception for when a glider input is invalid"""

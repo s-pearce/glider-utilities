@@ -23,7 +23,7 @@ def ce_map(
     # draw coastlines, country boundaries, fill continents.
     cem.drawcoastlines(linewidth=0.25)
     cem.drawcountries(linewidth=0.25)
-     cem.fillcontinents()
+    cem.fillcontinents()
     # draw the edge of the map projection region (the projection limb)
     cem.drawmapboundary()
 
