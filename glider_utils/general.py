@@ -1,7 +1,7 @@
 import re
 import logging
 from datetime import datetime as dt
-from dateutils.parser import parser as dtparse
+from dateutil.parser import parser as dtparse
 import numpy as np
 import pandas as pd
 from glider_utils.parsers.dbd_parsers import get_fileopen_time
