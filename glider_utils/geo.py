@@ -203,3 +203,55 @@ def direction_text(bearing, div=8):
     index = (bearing - mark) % 360
     index = int(index / div_range)
     return dirs[index]
+
+
+def dest_from_dist_and_bearing(lat, lon, bearing, dist):
+    """Destination point given distance and bearing from start point
+    
+    Given a start point, initial bearing, and distance, this will calculate 
+    the destination point travelling along a (shortest distance) great 
+    circle arc
+    
+    Params
+    ------
+    lat,lon : float (decimal degrees)
+        The latitude and longitude of the starting position in decimal
+        degrees.
+    bearing : float (degrees)
+        Bearing to follow in degrees from true North
+    dist : float (km)
+        Distance in kilometers to transit
+    
+    returns
+    -------
+    lat2, lon2 : float (decimal degrees)
+        The latitude and longitude of the final position in decimal
+        degrees.
+    
+    source: http://www.movable-type.co.uk/scripts/latlong.html
+    """
+    # Formula:
+    # φ2 = asin( sin φ1 * cos δ + cos φ1 * sin δ * cos θ )
+    # λ2 = λ1 + atan2( sin θ * sin δ * cos φ1, cos δ − sin φ1 * sin φ2 )
+    # where: 
+    # φ is latitude, λ is longitude, θ is the bearing (clockwise from north),
+    # δ is the angular distance d/R; d being the distance travelled, 
+    # and R the earth’s radius
+    
+    R = 6371  # Radius of earth (km)
+    sin = np.sin
+    cos = np.cos
+    asin = np.arcsin
+    atan2 = np.arctan2
+    ad = dist / R  # angular distance = distance (km) / Radius of earth (km)
+    phi1 = np.radians(lat)
+    lam1 = np.radians(lon)
+    theta = np.radians(bearing)
+    phi2 = asin(sin(phi1) * cos(ad) + cos(phi1) * sin(ad)*cos(theta))
+    lam2 = lam1 + atan2(
+        sin(theta) * sin(ad) * cos(phi1),
+        cos(ad) - sin(phi1) * sin(phi2))
+    lat2 = np.degrees(phi2)
+    lon2 = np.degrees(lam2)
+    # return lat and lon rounded to 6 decimal places
+    return np.round(lat2, 6), np.round(lon2, 6)
