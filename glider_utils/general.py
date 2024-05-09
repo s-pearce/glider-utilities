@@ -45,7 +45,8 @@ def gliderfile_from_time(ts, files):
     sorted_ots = opentimes[sortii]
     sorted_files = np.array(files)[sortii]
     
-    file_index = np.flatnonzero(sorted_ots < timex)[-1]
+    ts = np.datetime64(ts)
+    file_index = np.flatnonzero(sorted_ots < ts)[-1]
     return sorted_files[file_index]
 
 slocumregex = (
