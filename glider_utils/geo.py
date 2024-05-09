@@ -45,7 +45,30 @@ def iso2deg(iso_pos_element):
     degrees = degrees + (minutes*100./60.)
     return degrees
 
-def deg2iso(lat, lon, printIt=0):
+def deg2iso(lat, lon):
+    """convert decimal degrees position element to degree decimal minutes
+    in compact ISO format as a float.
+    """
+    lat_frac, lat_deg = np.modf(lat)
+    lon_frac, lon_deg = np.modf(lon)
+    lat_min = lat_frac * 60.
+    lon_min = lon_frac * 60.
+    lat_iso = np.round(lat_deg * 100 + lat_min, 3)
+    lon_iso = np.round(lon_deg * 100 + lon_min, 3)
+    return lat_iso, lon_iso
+
+def deg2iso_element(pos_element):
+    """convert decimal degrees position element to degree decimal minutes
+    in compact ISO format as a float.
+    """
+    frac, deg = np.modf(pos_element)
+    minutes = frac * 60.
+    pos_iso = np.round(deg * 100 + minutes, 3)
+    return pos_iso
+
+def _deg2iso(lat, lon, printIt=0):
+    """older version of deg2iso
+    """
     lat_frac, lat_deg = np.modf(lat)
     lon_frac, lon_deg = np.modf(lon)
     lat_min = lat_frac * 60.
@@ -57,7 +80,34 @@ def deg2iso(lat, lon, printIt=0):
     else:
         return iso_lat_str, iso_lon_str
 
+def deg2iso_pprint(lat, lon):
+    """Prints ISO format (degrees, decimal minutes) in a nice format.
+    e.g. DD° MM.MMM' N, DDD° MM.MMM' W
+    """
+    if lat < 0:
+        lat_dir = "S"
+    else:
+        lat_dir = "N"
+    
+    lat = np.abs(lat)
+    lat_deg = int(np.trunc(lat))
+    lat_min = (lat - lat_deg) * 60
+    
+    if lon < 0:
+        lon_dir = "W"
+    else:
+        lon_dir = "E"
+
+    lon = np.abs(lon)
+    lon_deg = int(np.trunc(lon))
+    lon_min = (lon - lon_deg) * 60
+    pos_str = u"{:d}\xb0 {:06.3f}' {}, {:d}\xb0 {:06.3f}' {}".format(
+        lat_deg, lat_min, lat_dir, lon_deg, lon_min, lon_dir)
+    return pos_str
+
 def deg2dms(lat,lon, printIt=0):
+    """ convert decimal degrees to degrees, minutes, seconds format
+    """
     lat_frac, lat_deg = np.modf(lat)
     lon_frac, lon_deg = np.modf(lon)
     lat_min = lat_frac * 60

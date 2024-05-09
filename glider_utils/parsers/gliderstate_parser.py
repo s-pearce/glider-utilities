@@ -104,8 +104,8 @@ class GSxml(object):
     
     
     def _get_next_waypt_info(self, root):
-        next_waypt_regex = re.compile('\((-*\d{4}\.\d+),(-*\d{5}\.\d+)\)')
-        bearing_regex = re.compile('(\d+)deg')
+        next_waypt_regex = re.compile(r'\((-*\d{4}\.\d+),(-*\d{5}\.\d+)\)')
+        bearing_regex = re.compile(r'(\d+)deg')
         for dataParam in root.findall('./writeTrack/dataParameters/dataParameter'):
             name = dataParam.find('name')
             value = dataParam.find('value')

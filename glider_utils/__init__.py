@@ -92,6 +92,22 @@ def fwd_fill(x, init_nan_fill=None):
     return y
 
 
+def fwd_fill_to_new_x(oldx, newx, y):
+    """forward fill y values to new x/timestamp values"""
+    temp_x = list(oldx)
+    temp_x.extend(list(newx))
+    all_x, unique_ii, inverse_ii = np.unique(temp_x, return_index=True, return_inverse=True)
+    
+    temp_y = np.full_like(temp_x, np.nan)
+    temp_y[0:len(oldx)] = y
+    all_y = temp_y[unique_ii]
+    all_y_ff = fwd_fill(all_y)
+    
+    temp_y_ff = all_y_ff[inverse_ii]
+    y_at_new_x = temp_y_ff[len(oldx):]
+    return y_at_new_x
+
+
 def cluster_index(indices, ids=False):
     ordinals = np.arange(0, len(indices))
     index = indices - ordinals
@@ -116,3 +132,30 @@ def nan_array_equal(arr1, arr2):
         return True
     else:
         return False
+
+
+def all_sci_indices(gldata):
+    """
+
+    :param gldata: A GliderData instance
+    :return:
+    """
+    sci_indices = np.array([], dtype=np.int64)
+    for sci_sensor in DATA_CONFIG_LIST:
+        sci_data = gldata.getdata(sci_sensor)
+        sci_ii = np.flatnonzero(np.isfinite(sci_data))
+        sci_indices = np.union1d(sci_indices, sci_ii)
+    return sci_indices
+
+# This came from Kerfoot's gncutils package.  I don't think its worth much
+# without having indices that tell you which columns have been removed, but
+# worth keeping as an example. I also think this should have been .all?
+def clean_dataset(dataset):
+    """Remove any row in dataset for which one or more columns is np.nan
+    """
+    # Get rid of NaNs
+    dataset = dataset[~np.isnan(dataset[:, 1:]).any(axis=1), :]
+
+    return dataset
+
+

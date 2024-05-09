@@ -96,7 +96,7 @@ class DbaDataParser(object):
         #pdb.set_trace()
         for line in self._fid.readlines():
             data.append(line.split())
-        data_array = np.array(data, dtype=np.float)  # NOTE: this is an array of strings
+        data_array = np.array(data, dtype=np.float64)  # NOTE: this is an array of strings
 
         # warn if # of described data rows != to amount read in.
         num_columns = int(self.hdr_dict['sensors_per_cycle'])
