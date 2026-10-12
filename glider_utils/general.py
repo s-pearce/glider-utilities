@@ -1,3 +1,4 @@
+import os
 import re
 import logging
 from datetime import datetime as dt
@@ -38,7 +39,8 @@ def gliderfile_from_time(ts, files):
     opentimes = np.empty(len(files), dtype='datetime64[ns]')
     for ii, file in enumerate(files):
         opentime = get_fileopen_time(file)
-        ot_dt = dt.strptime(opentime.replace("_", " "), "%c")
+        #ot_dt = dt.strptime(opentime.replace("_", " "), "%c")
+        ot_dt = dtparse(opentime.replace("_", " "))
         opentimes[ii] = ot_dt
     # get the sorting indices
     sortii = np.argsort(opentimes)
@@ -56,6 +58,7 @@ regex = re.compile(slocumregex)
 
 
 def sort_function(filename):
+    """Sort function for glider mission data files to apply to <filelist>.sort(key=pb_sort)"""
     fname = os.path.basename(filename)
     match = regex.search(fname)
     if not match:
@@ -70,3 +73,20 @@ def sort_function(filename):
         segment_num = '{:04d}'.format(int(match.group(3)))
         sort_str = match.group(1) + mission_num + '_' + segment_num
     return sort_str
+
+
+def pb_sort(item):
+    """Sort function for PB files to apply to <filelist>.sort(key=pb_sort)"""
+    rematch = re.search(r'PB_(\d{4})_(.+).json', item)
+    pbsn = rematch.group(1)
+    csr = rematch.group(2)
+    if csr.startswith('R') or csr.startswith('1761'):
+        sortmod = 0
+        if csr.startswith('R'):
+            csr = csr[1:]
+        elif csr.startswith('1761'):
+            csr = csr[0:4]
+    else:
+        sortmod = 1
+    csr = '{:06d}'.format(int(csr))
+    return '{:04}_{}_{}'.format(int(pbsn), sortmod, csr)
