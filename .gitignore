@@ -2,3 +2,4 @@
 build/
 dist/
 glider_utilities.egg-info/
+.idea/
